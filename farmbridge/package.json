@@ -1,0 +1,14 @@
+{
+  "name": "farmbridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-platform Android/iOS device automation bridge for macOS",
+  "type": "module",
+  "scripts": {
+    "start": "node src/farmbridge.mjs",
+    "devices": "node src/farmbridge.mjs devices",
+    "test": "node --test"
+  },
+  "engines": {"node": ">=20"},
+  "license": "MIT"
+}
