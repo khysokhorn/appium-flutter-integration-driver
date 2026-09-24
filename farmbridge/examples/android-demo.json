@@ -1,0 +1,8 @@
+{
+  "actions": [
+    {"type":"launch","appId":"com.android.settings"},
+    {"type":"wait","ms":1000},
+    {"type":"screenshot","path":"./android-settings.png"},
+    {"type":"home"}
+  ]
+}
