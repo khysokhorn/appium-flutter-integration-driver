@@ -21,8 +21,6 @@ jobs:
     defaults:
       run:
         working-directory: farmbridge
-    env:
-      APPIUM_HOME: ${{ runner.temp }}/farmbridge-appium
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +28,8 @@ jobs:
           node-version: 22
       - name: Verify macOS host tools
         if: runner.os == 'macOS'
+        env:
+          APPIUM_HOME: ${{ runner.temp }}/farmbridge-appium
         run: |
           xcodebuild -version
           xcrun --find xctrace
