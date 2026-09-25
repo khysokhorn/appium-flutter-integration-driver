@@ -21,6 +21,18 @@ It is intentionally a general device-control/test automation project. It does no
 - macOS environment checker
 - Node built-in test suite
 - GitHub Actions on macOS and Ubuntu
+- Local video library, Facebook account profiles bound to devices, and a scheduled Reel preparation queue
+
+## Reel preparation workflow
+
+In the dashboard at `http://127.0.0.1:8787`:
+
+1. Add an MP4, MOV, or M4V video (up to 500 MB). It is copied into `~/.farmbridge/media` on the Mac running FarmBridge.
+2. Add a named account profile tied to a connected device and the Facebook app ID. Sign into that account in the device app yourself; FarmBridge does not store credentials.
+3. Choose the profile, video, caption, and optional future preparation time. A scheduled Reel will automatically prepare at that time while FarmBridge is running. You can also press **Prepare now**.
+4. On Android, preparation copies the video into `Movies/FarmBridge`, requests a media scan, and opens the app. Review the video and caption on the device, then publish it there. On iOS, the queue clearly marks `needs_ios_import`: transfer the video into Photos yourself, then choose **Video imported — open app**. Review and publish it on the iPhone.
+
+This is a **preparation queue**, not a confirmed Facebook publishing integration. Its `ready` state means the Android video has been staged and the app opened; it does not mean a Reel was posted. Facebook app screens and account-specific navigation need device testing before adding a reliable publish action. Local metadata is stored in `~/.farmbridge/studio.json`; set `FARMBRIDGE_MEDIA_DIR` and `FARMBRIDGE_STUDIO_STATE` to change those locations.
 
 ## Architecture
 

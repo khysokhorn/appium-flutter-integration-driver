@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FarmBridge</title>
+  <title>FarmBridge Studio</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <main>
-    <header><div><h1>FarmBridge</h1><p>Android ADB + iOS XCUITest bridge</p></div><button id="refresh">Refresh devices</button></header>
+    <header><div><h1>FarmBridge Studio</h1><p>Prepare and schedule Reel videos from your Mac</p></div><button id="refresh">Refresh</button></header>
     <section class="panel"><h2>Devices</h2><div id="devices">Loading…</div></section>
+    <section class="panel"><h2>Video library</h2><p>Videos stay on the Mac running FarmBridge (maximum 500 MB per video).</p><input id="video-file" type="file" accept=".mp4,.mov,.m4v,video/mp4,video/quicktime" /><button id="upload">Add video</button><div id="media">No videos yet.</div></section>
+    <section class="panel"><h2>Facebook account profiles</h2><p>Choose a device where you have already signed in. FarmBridge does not store passwords.</p><label>Profile name</label><input id="account-name" placeholder="My page" /><label>Device</label><select id="account-device"></select><label>App ID / bundle ID</label><input id="account-app" placeholder="com.facebook.katana" value="com.facebook.katana" /><button id="add-account">Add profile</button><div id="accounts"></div></section>
+    <section class="panel"><h2>Reel queue</h2><label>Profile</label><select id="reel-account"></select><label>Video</label><select id="reel-media"></select><label>Caption</label><textarea id="reel-caption" class="caption" placeholder="Caption to copy when posting"></textarea><label>Prepare at (optional)</label><input id="reel-time" type="datetime-local" /><button id="add-reel">Save Reel</button><p>Preparation transfers the video to Android and opens the chosen app. Review and publish the Reel on the device. For iOS, import the video into Photos manually before posting.</p><div id="reels"></div></section>
     <section class="panel"><h2>Run workflow</h2><label>Device</label><select id="device"></select><label>Actions JSON</label><textarea id="actions" spellcheck="false">[
   {"type":"home"},
   {"type":"wait","ms":500}
