@@ -59,6 +59,22 @@ jobs:
           done
           cat "$RUNNER_TEMP/farmbridge.log"
           exit 1
+      - name: Launch native Mac window
+        if: runner.os == 'macOS'
+        run: |
+          ./dist/FarmBridge.app/Contents/MacOS/FarmBridge > "$RUNNER_TEMP/farmbridge-ui.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              cat "$RUNNER_TEMP/farmbridge-ui.log"
+              exit 1
+            fi
+            if grep -q 'FarmBridge listening at http://127.0.0.1:' "$HOME/Library/Logs/FarmBridge/bridge.log" 2>/dev/null; then exit 0; fi
+            sleep 0.2
+          done
+          cat "$RUNNER_TEMP/farmbridge-ui.log"
+          exit 1
       - uses: actions/upload-artifact@v4
         if: runner.os == 'macOS'
         with:
