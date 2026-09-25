@@ -70,7 +70,8 @@ cd appium-flutter-integration-driver/farmbridge
 Using Homebrew:
 
 ```bash
-brew install node android-platform-tools
+brew install node
+brew install --cask android-platform-tools
 ```
 
 Verify:
