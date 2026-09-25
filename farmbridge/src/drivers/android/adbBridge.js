@@ -59,7 +59,12 @@ export class AdbBridge extends DeviceBridge {
   }
 
   async pushFile(deviceId, localPath, remotePath) {
+    await this.#shell(deviceId, ['mkdir', '-p', '/sdcard/Movies/FarmBridge']);
     await runFile(this.adbPath, ['-s', deviceId, 'push', localPath, remotePath]);
+  }
+
+  async scanMedia(deviceId, remotePath) {
+    await this.#shell(deviceId, ['am', 'broadcast', '-a', 'android.intent.action.MEDIA_SCANNER_SCAN_FILE', '-d', `file://${remotePath}`]);
   }
 
   async #shell(deviceId, args) {

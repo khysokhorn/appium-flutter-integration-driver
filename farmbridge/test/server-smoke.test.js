@@ -58,6 +58,8 @@ test('starts on a Mac-style host and controls simulated Android and iOS devices 
         ADB_PATH: adb, PATH: `${temp}${path.delimiter}${process.env.PATH || ''}`,
         APPIUM_URL: `http://127.0.0.1:${appium.address().port}`,
         FARMBRIDGE_STATE: path.join(temp, 'state.json'),
+        FARMBRIDGE_STUDIO_STATE: path.join(temp, 'studio.json'),
+        FARMBRIDGE_MEDIA_DIR: path.join(temp, 'media'),
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -90,6 +92,39 @@ test('starts on a Mac-style host and controls simulated Android and iOS devices 
     assert.equal(ios.status, 200);
     assert.equal(ios.data.results[2].source, '<iOS />');
     assert.ok(appiumCalls.some(call => call.url === '/session' && call.body.capabilities.alwaysMatch['appium:automationName'] === 'XCUITest'));
+
+    const uploadResponse = await fetch(`http://127.0.0.1:${port}/api/media/upload?name=demo.mp4`, {
+      method: 'POST', headers: { 'content-type': 'video/mp4' }, body: Buffer.from('fake video bytes'),
+    });
+    assert.equal(uploadResponse.status, 201);
+    const mediaId = (await uploadResponse.json()).media.id;
+    assert.ok((await request(port, '/api/media')).data.media.some(item => item.id === mediaId));
+    const profile = await request(port, '/api/accounts', { name: 'My Facebook page', deviceId: 'android:FAKE123', appId: 'com.facebook.katana' });
+    assert.equal(profile.status, 201);
+    const reel = await request(port, '/api/reels', { accountId: profile.data.account.id, mediaId, caption: 'Test Reel' });
+    assert.equal(reel.status, 201);
+    assert.equal(reel.data.reel.status, 'draft');
+    const prepared = await request(port, `/api/reels/${reel.data.reel.id}/prepare`, {});
+    assert.equal(prepared.data.reel.status, 'ready');
+    assert.match(prepared.data.reel.remotePath, /^\/sdcard\/Movies\/FarmBridge\//);
+    const scheduled = await request(port, '/api/reels', {
+      accountId: profile.data.account.id, mediaId, scheduledAt: new Date(Date.now() + 700).toISOString(),
+    });
+    assert.equal(scheduled.data.reel.status, 'scheduled');
+    let scheduledStatus;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      scheduledStatus = (await request(port, '/api/reels')).data.reels.find(item => item.id === scheduled.data.reel.id)?.status;
+      if (scheduledStatus === 'ready') break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert.equal(scheduledStatus, 'ready');
+    const iosProfile = await request(port, '/api/accounts', { name: 'iPhone profile', deviceId: 'ios:12345678-1234-1234-1234-123456789ABC', appId: 'com.facebook.Facebook' });
+    const iosReel = await request(port, '/api/reels', { accountId: iosProfile.data.account.id, mediaId });
+    const iosPrepared = await request(port, `/api/reels/${iosReel.data.reel.id}/prepare`, {});
+    assert.equal(iosPrepared.data.reel.status, 'needs_ios_import');
+    const iosOpened = await request(port, `/api/reels/${iosReel.data.reel.id}/confirm-ios-import`, {});
+    assert.equal(iosOpened.data.reel.status, 'ready');
+    assert.ok(appiumCalls.some(call => call.url.endsWith('/appium/device/activate_app') && call.body.bundleId === 'com.facebook.Facebook'));
 
     const added = await request(port, '/api/jobs', { deviceId: 'android:FAKE123', runAt: new Date(0).toISOString(), actions: [{ type: 'home' }] });
     assert.equal(added.status, 201);

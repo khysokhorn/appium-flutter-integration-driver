@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../../public');
 
-export function createHttpServer({ deviceManager, actionRunner, scheduler }) {
+export function createHttpServer({ deviceManager, actionRunner, scheduler, studio }) {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -27,6 +27,18 @@ export function createHttpServer({ deviceManager, actionRunner, scheduler }) {
         const body = await readJson(req);
         return json(res, 201, { job: await scheduler.add(body) });
       }
+      if (req.method === 'GET' && url.pathname === '/api/accounts') return json(res, 200, { accounts: studio.listAccounts() });
+      if (req.method === 'POST' && url.pathname === '/api/accounts') return json(res, 201, { account: await studio.addAccount(await readJson(req)) });
+      if (req.method === 'GET' && url.pathname === '/api/media') return json(res, 200, { media: studio.listMedia() });
+      if (req.method === 'POST' && url.pathname === '/api/media/upload') {
+        return json(res, 201, { media: await studio.upload(req, url.searchParams.get('name')) });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/reels') return json(res, 200, { reels: studio.listReels() });
+      if (req.method === 'POST' && url.pathname === '/api/reels') return json(res, 201, { reel: await studio.addReel(await readJson(req)) });
+      const prepare = url.pathname.match(/^\/api\/reels\/([a-f0-9-]+)\/prepare$/);
+      if (req.method === 'POST' && prepare) return json(res, 200, { reel: await studio.prepare(prepare[1]) });
+      const iosImport = url.pathname.match(/^\/api\/reels\/([a-f0-9-]+)\/confirm-ios-import$/);
+      if (req.method === 'POST' && iosImport) return json(res, 200, { reel: await studio.confirmIosImport(iosImport[1]) });
       if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
         return file(res, path.join(publicDir, 'index.html'), 'text/html; charset=utf-8');
       }
