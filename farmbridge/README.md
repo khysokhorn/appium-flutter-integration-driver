@@ -1,5 +1,7 @@
 # FarmBridge
 
+[![FarmBridge CI](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml/badge.svg)](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml)
+
 FarmBridge is an original, cross-platform device automation bridge designed to run on macOS. It gives one API to Android devices through **ADB** and iOS devices through **Xcode discovery + Appium/XCUITest**.
 
 It is intentionally a general device-control/test automation project. It does not include anti-detection, account farming, credential harvesting, proxy rotation, CAPTCHA bypassing, or platform-abuse features.
@@ -88,10 +90,14 @@ xcrun xctrace list devices
 For interactive iOS automation, FarmBridge uses Appium + XCUITest:
 
 ```bash
+# Keep FarmBridge's Appium drivers separate from the parent repository.
+export APPIUM_HOME="$HOME/.farmbridge-appium"
 npm install -g appium
 appium driver install xcuitest
 appium
 ```
+
+Use the same `APPIUM_HOME` value whenever you start Appium in a new terminal.
 
 For a physical iPhone, WebDriverAgent must be signed by your Apple development team the first time. Appium's XCUITest driver documentation covers that one-time setup.
 
@@ -208,4 +214,10 @@ npm test
 npm run check
 ```
 
-The project has no runtime npm dependencies, which keeps the host bridge auditable and easy to run. The CI job checks the Node code on macOS and Linux; connecting to an Android phone or signed iPhone still requires a local Mac and device setup.
+The project has no runtime npm dependencies, which keeps the host bridge auditable and easy to run.
+
+## GitHub pipeline
+
+Open [FarmBridge CI](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml) to see the latest result or use **Run workflow** to test it before cloning. Each run checks syntax and starts the real FarmBridge server on Linux and macOS. An HTTP smoke test discovers simulated Android and iOS devices, performs ADB and Appium actions, and runs a scheduled job. The macOS job also checks Xcode, installs Android platform tools and Appium/XCUITest, and reports setup failures.
+
+Green CI means the code starts and the simulated workflows work on the GitHub runners. USB authorization, the versions installed on your Mac, physical iPhone signing, and real device behavior still need a check on your Mac with `./scripts/check-macos.sh` and `npm run cli -- devices`.

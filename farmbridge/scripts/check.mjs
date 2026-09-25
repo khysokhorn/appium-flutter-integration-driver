@@ -1,16 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = fileURLToPath(new URL('..', import.meta.url));
 const files = [];
 walk(path.join(root, 'src'));
 walk(path.join(root, 'bin'));
 walk(path.join(root, 'test'));
-for (const file of files.filter(x => x.endsWith('.js'))) {
+const scripts = files.filter(x => /\.(?:js|mjs)$/.test(x));
+for (const file of scripts) {
   execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
 }
-console.log(`Syntax OK: ${files.filter(x => x.endsWith('.js')).length} JavaScript files`);
+console.log(`Syntax OK: ${scripts.length} JavaScript files`);
 
 function walk(dir) {
   for (const name of fs.readdirSync(dir)) {
