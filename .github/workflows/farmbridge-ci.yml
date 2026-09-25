@@ -41,3 +41,43 @@ jobs:
         working-directory: farmbridge
       - run: npm test
       - run: npm run check
+      - name: Build native Mac application
+        if: runner.os == 'macOS'
+        run: bash scripts/build-macos-app.sh
+      - name: Smoke test bundled device bridge
+        if: runner.os == 'macOS'
+        run: |
+          export PORT=18789
+          export FARMBRIDGE_STATE="$RUNNER_TEMP/farmbridge-state.json"
+          export FARMBRIDGE_STUDIO_STATE="$RUNNER_TEMP/farmbridge-studio.json"
+          ./dist/FarmBridge.app/Contents/MacOS/node ./dist/FarmBridge.app/Contents/Resources/farmbridge/src/index.js > "$RUNNER_TEMP/farmbridge.log" 2>&1 &
+          bridge_pid=$!
+          trap 'kill "$bridge_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --silent --show-error --fail http://127.0.0.1:18789/api/health; then exit 0; fi
+            sleep 0.2
+          done
+          cat "$RUNNER_TEMP/farmbridge.log"
+          exit 1
+      - name: Launch native Mac window
+        if: runner.os == 'macOS'
+        run: |
+          ./dist/FarmBridge.app/Contents/MacOS/FarmBridge > "$RUNNER_TEMP/farmbridge-ui.log" 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              cat "$RUNNER_TEMP/farmbridge-ui.log"
+              exit 1
+            fi
+            if grep -q 'FarmBridge listening at http://127.0.0.1:' "$HOME/Library/Logs/FarmBridge/bridge.log" 2>/dev/null; then exit 0; fi
+            sleep 0.2
+          done
+          cat "$RUNNER_TEMP/farmbridge-ui.log"
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
+        with:
+          name: FarmBridge-macOS-AppleSilicon
+          path: farmbridge/dist/FarmBridge-macOS-arm64.zip
+          if-no-files-found: error

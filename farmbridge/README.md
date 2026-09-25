@@ -1,8 +1,16 @@
-# FarmBridge
+# FarmBridge Studio for macOS
 
 [![FarmBridge CI](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml/badge.svg)](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml)
 
-FarmBridge is an original, cross-platform device automation bridge designed to run on macOS. It gives one API to Android devices through **ADB** and iOS devices through **Xcode discovery + Appium/XCUITest**.
+FarmBridge Studio is a native SwiftUI macOS application for preparing and scheduling Reels. It includes a local device bridge: Android through **ADB** and iOS through **Xcode discovery + Appium/XCUITest**. No browser window or separately started website is required for the Mac app.
+
+## Download the Mac app
+
+Open a successful [FarmBridge CI run](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml) and download the **FarmBridge-macOS-AppleSilicon** artifact under Artifacts. Unzip `FarmBridge-macOS-arm64.zip`, drag `FarmBridge.app` to Applications, and open it. This app requires macOS 14 or newer on Apple Silicon. It contains its own Node.js runtime and automatically starts the bridge when you open the app.
+
+For Android, install [Android Platform Tools](https://formulae.brew.sh/cask/android-platform-tools) using `brew install --cask android-platform-tools`, then enable USB debugging on your phone and approve the Mac. For iOS, install full Xcode and run Appium/XCUITest separately as described below. This CI build has an ad hoc signature and is not Apple notarized; macOS may require you to approve opening it in System Settings → Privacy & Security.
+
+To build the app yourself on a Mac with full Xcode and Node.js installed: `bash scripts/build-macos-app.sh`. The ZIP appears in `dist/`.
 
 It is intentionally a general device-control/test automation project. It does not include anti-detection, account farming, credential harvesting, proxy rotation, CAPTCHA bypassing, or platform-abuse features.
 
@@ -14,7 +22,7 @@ It is intentionally a general device-control/test automation project. It does no
 - iOS tap, swipe, text input, app launch/terminate, screenshots, and Home button through Appium/XCUITest
 - Unified `DeviceBridge` abstraction
 - REST API
-- Browser dashboard
+- Native macOS desktop interface (with an optional browser dashboard for development)
 - CLI
 - Declarative JSON action runner
 - One-shot and recurring scheduler with local JSON persistence
@@ -25,7 +33,7 @@ It is intentionally a general device-control/test automation project. It does no
 
 ## Reel preparation workflow
 
-In the dashboard at `http://127.0.0.1:8787`:
+In the Mac app (or the optional development dashboard at `http://127.0.0.1:8787`):
 
 1. Add an MP4, MOV, or M4V video (up to 500 MB). It is copied into `~/.farmbridge/media` on the Mac running FarmBridge.
 2. Add a named account profile tied to a connected device and the Facebook app ID. Sign into that account in the device app yourself; FarmBridge does not store credentials.
@@ -121,9 +129,9 @@ chmod +x scripts/check-macos.sh
 ./scripts/check-macos.sh
 ```
 
-### 5. Start FarmBridge
+### 5. Start the optional development server
 
-No project dependencies are required:
+The downloaded Mac app starts its own bridge. If you are developing the Node code without the Mac app, no project dependencies are required:
 
 ```bash
 npm start
@@ -231,6 +239,6 @@ The project has no runtime npm dependencies, which keeps the host bridge auditab
 
 ## GitHub pipeline
 
-Open [FarmBridge CI](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml) to see the latest result or use **Run workflow** to test it before cloning. Each run checks syntax and starts the real FarmBridge server on Linux and macOS. An HTTP smoke test discovers simulated Android and iOS devices, performs ADB and Appium actions, and runs a scheduled job. The macOS job also checks Xcode, installs Android platform tools and Appium/XCUITest, and reports setup failures.
+Open [FarmBridge CI](https://github.com/khysokhorn/appium-flutter-integration-driver/actions/workflows/farmbridge-ci.yml) to see the latest result or use **Run workflow** to test it before cloning. Each run checks syntax and starts the real FarmBridge server on Linux and macOS. An HTTP smoke test discovers simulated Android and iOS devices, performs ADB and Appium actions, and runs a scheduled job. The macOS job also checks Xcode, installs Android platform tools and Appium/XCUITest, compiles the native app, and uploads a ZIP artifact.
 
 Green CI means the code starts and the simulated workflows work on the GitHub runners. USB authorization, the versions installed on your Mac, physical iPhone signing, and real device behavior still need a check on your Mac with `./scripts/check-macos.sh` and `npm run cli -- devices`.

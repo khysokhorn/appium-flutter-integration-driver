@@ -18,9 +18,9 @@ async function freePort() {
 }
 
 async function request(port, route, body) {
-  const response = await fetch(`http://127.0.0.1:${port}${route}`, body == null ? {} : {
+  const response = await fetch(`http://127.0.0.1:${port}${route}`, body == null ? { headers: { authorization: 'Bearer smoke-token' } } : {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer smoke-token' },
     body: JSON.stringify(body),
   });
   return { status: response.status, data: await response.json() };
@@ -60,6 +60,7 @@ test('starts on a Mac-style host and controls simulated Android and iOS devices 
         FARMBRIDGE_STATE: path.join(temp, 'state.json'),
         FARMBRIDGE_STUDIO_STATE: path.join(temp, 'studio.json'),
         FARMBRIDGE_MEDIA_DIR: path.join(temp, 'media'),
+        FARMBRIDGE_API_TOKEN: 'smoke-token',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -71,6 +72,7 @@ test('starts on a Mac-style host and controls simulated Android and iOS devices 
       try { health = await request(port, '/api/health'); break; } catch { await new Promise(resolve => setTimeout(resolve, 100)); }
     }
     assert.deepEqual(health, { status: 200, data: { ok: true, name: 'farmbridge' } }, output);
+    assert.equal((await fetch(`http://127.0.0.1:${port}/api/reels`)).status, 401);
     const page = await fetch(`http://127.0.0.1:${port}/`);
     assert.equal(page.status, 200);
     assert.match(await page.text(), /FarmBridge/);
@@ -94,7 +96,7 @@ test('starts on a Mac-style host and controls simulated Android and iOS devices 
     assert.ok(appiumCalls.some(call => call.url === '/session' && call.body.capabilities.alwaysMatch['appium:automationName'] === 'XCUITest'));
 
     const uploadResponse = await fetch(`http://127.0.0.1:${port}/api/media/upload?name=demo.mp4`, {
-      method: 'POST', headers: { 'content-type': 'video/mp4' }, body: Buffer.from('fake video bytes'),
+      method: 'POST', headers: { 'content-type': 'video/mp4', authorization: 'Bearer smoke-token' }, body: Buffer.from('fake video bytes'),
     });
     assert.equal(uploadResponse.status, 201);
     const mediaId = (await uploadResponse.json()).media.id;
