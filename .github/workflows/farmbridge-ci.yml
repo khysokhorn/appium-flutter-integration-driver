@@ -2,8 +2,7 @@ name: FarmBridge CI
 
 on:
   push:
-    branches:
-      - farmbridge-cross-platform
+    branches: [main, farmbridge-cross-platform]
     paths:
       - 'farmbridge/**'
       - '.github/workflows/farmbridge-ci.yml'
@@ -27,4 +26,4 @@ jobs:
         with:
           node-version: 22
       - run: npm test
-      - run: node --check src/farmbridge.mjs
+      - run: npm run check

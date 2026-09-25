@@ -1,6 +1,6 @@
-.DS_Store
 node_modules/
+.DS_Store
 .env
 .farmbridge/
+coverage/
 *.log
-*.png

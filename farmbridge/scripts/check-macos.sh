@@ -32,14 +32,12 @@ if command -v node >/dev/null 2>&1; then
 fi
 
 if command -v adb >/dev/null 2>&1; then
-  echo ""
-  echo "Android devices:"
+  echo "\nAndroid devices:"
   adb devices -l || true
 fi
 
 if command -v xcrun >/dev/null 2>&1; then
-  echo ""
-  echo "iOS devices/simulators:"
+  echo "\niOS devices/simulators:"
   xcrun xctrace list devices 2>/dev/null | head -40 || true
 fi
 

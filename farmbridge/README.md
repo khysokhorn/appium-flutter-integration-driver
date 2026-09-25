@@ -1,51 +1,91 @@
 # FarmBridge
 
-FarmBridge is a macOS-friendly device automation bridge with one workflow API for **Android via ADB** and **iOS via Appium/XCUITest**.
+FarmBridge is an original, cross-platform device automation bridge designed to run on macOS. It gives one API to Android devices through **ADB** and iOS devices through **Xcode discovery + Appium/XCUITest**.
 
-It is an original implementation for devices and accounts you control. It intentionally does not include anti-detection, account farming, CAPTCHA bypassing, credential harvesting, or proxy-rotation/evasion features.
+It is intentionally a general device-control/test automation project. It does not include anti-detection, account farming, credential harvesting, proxy rotation, CAPTCHA bypassing, or platform-abuse features.
 
-## Features
+## What is included
 
-- Android and iOS device discovery
-- Tap, swipe, text input, Home, app launch/terminate
-- Screenshot and UI/source capture
-- Android APK install and file push in the bridge layer
-- iOS interaction through Appium + XCUITest
-- REST API and a small browser dashboard
-- JSON workflow runner
-- Persistent one-shot/recurring scheduler
-- No runtime npm dependencies
+- Android device discovery with `adb devices -l`
+- Android tap, swipe, text input, app launch/terminate, screenshots, UI hierarchy dump, install, and file push
+- iOS device/simulator discovery with Xcode command-line tools
+- iOS tap, swipe, text input, app launch/terminate, screenshots, and Home button through Appium/XCUITest
+- Unified `DeviceBridge` abstraction
+- REST API
+- Browser dashboard
+- CLI
+- Declarative JSON action runner
+- One-shot and recurring scheduler with local JSON persistence
+- macOS environment checker
+- Node built-in test suite
+- GitHub Actions on macOS and Ubuntu
 
 ## Architecture
 
 ```text
 FarmBridge
-  DeviceManager
-    AndroidBridge -> adb -> Android device/emulator
-    IosBridge     -> Appium/XCUITest -> iPhone/iOS Simulator
-  ActionRunner
-  Scheduler
-  REST API / Dashboard
+├── core/
+│   ├── DeviceBridge
+│   ├── DeviceManager
+│   └── ActionRunner
+├── drivers/
+│   ├── android/AdbBridge
+│   └── ios/
+│       ├── IosDiscovery
+│       └── IosAppiumBridge
+├── scheduler/
+├── storage/
+├── server/
+├── CLI
+└── dashboard
 ```
 
-The shared action format means a higher-level workflow can target either platform without knowing the underlying transport.
+The important boundary is `DeviceBridge`. Higher-level workflows do not need to know whether the target is Android or iOS.
 
-## Run on macOS
+## macOS setup
 
-Install Node and Android Platform Tools:
+Clone the repository and enter the FarmBridge project:
+
+```bash
+git clone https://github.com/khysokhorn/appium-flutter-integration-driver.git
+cd appium-flutter-integration-driver/farmbridge
+```
+
+### 1. Install Node.js and Android Platform Tools
+
+Using Homebrew:
 
 ```bash
 brew install node android-platform-tools
 ```
 
-For iOS, install full Xcode and select it:
+Verify:
+
+```bash
+node --version
+adb version
+```
+
+### 2. Android
+
+Enable Developer Options and USB debugging on your Android device, connect it, then run:
+
+```bash
+adb devices
+```
+
+Accept the authorization dialog on the phone.
+
+### 3. iOS
+
+Install full Xcode from the App Store and make sure command-line tools point to it:
 
 ```bash
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 xcrun xctrace list devices
 ```
 
-For interactive iOS automation install Appium/XCUITest:
+For interactive iOS automation, FarmBridge uses Appium + XCUITest:
 
 ```bash
 npm install -g appium
@@ -53,85 +93,119 @@ appium driver install xcuitest
 appium
 ```
 
-For a physical iPhone, WebDriverAgent needs normal Apple developer signing the first time.
+For a physical iPhone, WebDriverAgent must be signed by your Apple development team the first time. Appium's XCUITest driver documentation covers that one-time setup.
 
-Then:
+### 4. Run the environment check
 
 ```bash
-cd farmbridge
 chmod +x scripts/check-macos.sh
 ./scripts/check-macos.sh
-npm test
+```
+
+### 5. Start FarmBridge
+
+No project dependencies are required:
+
+```bash
 npm start
 ```
 
-Open `http://127.0.0.1:8787`.
-
-## Device discovery
-
-```bash
-npm run devices
-```
-
-IDs look like:
+Then open:
 
 ```text
-android:emulator-5554
-ios:00008110-...
+http://127.0.0.1:8787
 ```
 
-## Workflow example
-
-```json
-{
-  "actions": [
-    {"type":"launch","appId":"com.android.settings"},
-    {"type":"wait","ms":1000},
-    {"type":"tap","x":300,"y":500},
-    {"type":"screenshot","path":"./screen.png"},
-    {"type":"home"}
-  ]
-}
-```
-
-Run it:
+By default FarmBridge looks for Appium at `http://127.0.0.1:4723`. Override it with:
 
 ```bash
-node src/farmbridge.mjs run android:YOUR_SERIAL examples/android-demo.json
+APPIUM_URL=http://127.0.0.1:4723 npm start
 ```
 
-Supported shared actions are `tap`, `swipe`, `text`, `launch`, `terminate`, `home`, `wait`, `screenshot`, and `source`.
+## CLI
+
+List devices:
+
+```bash
+npm run cli -- devices
+```
+
+Run a workflow:
+
+```bash
+npm run cli -- run android:YOUR_SERIAL examples/android-demo.json
+```
+
+For iOS:
+
+```bash
+npm run cli -- run ios:YOUR_UDID examples/ios-demo.json
+```
 
 ## REST API
+
+List devices:
 
 ```bash
 curl http://127.0.0.1:8787/api/devices
 ```
 
+Run actions:
+
 ```bash
 curl -X POST http://127.0.0.1:8787/api/run \
   -H 'content-type: application/json' \
-  -d '{"deviceId":"android:SERIAL","actions":[{"type":"home"}]}'
+  -d '{
+    "deviceId": "android:SERIAL",
+    "actions": [
+      {"type":"launch","appId":"com.android.settings"},
+      {"type":"wait","ms":1000},
+      {"type":"tap","x":300,"y":500}
+    ]
+  }'
 ```
 
-Schedule a workflow:
+Schedule the same action set:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/api/jobs \
   -H 'content-type: application/json' \
-  -d '{"deviceId":"android:SERIAL","runAt":"2026-09-25T09:00:00+07:00","actions":[{"type":"home"}]}'
+  -d '{
+    "deviceId": "android:SERIAL",
+    "runAt": "2026-09-25T09:00:00+07:00",
+    "actions": [
+      {"type":"launch","appId":"com.android.settings"}
+    ]
+  }'
 ```
 
-Recurring jobs support `repeatEveryMs` with a minimum interval of 60 seconds.
+## Supported actions
 
-## Environment variables
+```json
+[
+  {"type":"tap","x":100,"y":200},
+  {"type":"swipe","x1":100,"y1":600,"x2":100,"y2":200,"durationMs":450},
+  {"type":"text","text":"hello"},
+  {"type":"launch","appId":"com.example.app"},
+  {"type":"terminate","appId":"com.example.app"},
+  {"type":"home"},
+  {"type":"wait","ms":1000},
+  {"type":"screenshot","path":"./shot.png"},
+  {"type":"source"}
+]
+```
 
-- `PORT` defaults to `8787`
-- `HOST` defaults to `127.0.0.1`
-- `ADB_PATH` defaults to `adb`
-- `APPIUM_URL` defaults to `http://127.0.0.1:4723`
-- `FARMBRIDGE_STATE` defaults to `~/.farmbridge/state.json`
+Android additionally supports `install` and `pushFile` via the bridge API. iOS application install/deployment is deliberately left to Xcode/Appium because physical-device signing requirements vary by team.
 
-## Notes
+## iOS notes
 
-`xcrun` handles iOS device discovery, but Apple does not expose a general ADB-like touch API. Interactive iOS control therefore goes through XCUITest/Appium. Android remains direct ADB.
+`xcrun` can discover devices and simulators but does not provide the same general touch/input API as ADB. That is why FarmBridge uses XCUITest through Appium for interactive actions. A session is created lazily on the first action for each iOS device.
+
+## Development
+
+```bash
+npm test
+npm run check
+```
+
+The project has no runtime npm dependencies, which keeps the host bridge auditable and easy to run. The CI job checks the Node code on macOS and Linux; connecting to an Android phone or signed iPhone still requires a local Mac and device setup.
