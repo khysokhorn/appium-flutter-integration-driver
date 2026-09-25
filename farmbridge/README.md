@@ -90,10 +90,14 @@ xcrun xctrace list devices
 For interactive iOS automation, FarmBridge uses Appium + XCUITest:
 
 ```bash
+# Keep FarmBridge's Appium drivers separate from the parent repository.
+export APPIUM_HOME="$HOME/.farmbridge-appium"
 npm install -g appium
 appium driver install xcuitest
 appium
 ```
+
+Use the same `APPIUM_HOME` value whenever you start Appium in a new terminal.
 
 For a physical iPhone, WebDriverAgent must be signed by your Apple development team the first time. Appium's XCUITest driver documentation covers that one-time setup.
 
