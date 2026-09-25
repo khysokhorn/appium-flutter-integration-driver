@@ -10,6 +10,10 @@ export function createHttpServer({ deviceManager, actionRunner, scheduler, studi
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
+      const apiToken = process.env.FARMBRIDGE_API_TOKEN;
+      if (url.pathname.startsWith('/api/') && apiToken && req.headers.authorization !== `Bearer ${apiToken}`) {
+        return json(res, 401, { error: 'Unauthorized' });
+      }
       if (req.method === 'GET' && url.pathname === '/api/health') {
         return json(res, 200, { ok: true, name: 'farmbridge' });
       }
