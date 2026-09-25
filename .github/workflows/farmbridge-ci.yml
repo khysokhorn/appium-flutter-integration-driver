@@ -1,0 +1,29 @@
+name: FarmBridge CI
+
+on:
+  push:
+    branches: [main, farmbridge-cross-platform]
+    paths:
+      - 'farmbridge/**'
+      - '.github/workflows/farmbridge-ci.yml'
+  pull_request:
+    paths:
+      - 'farmbridge/**'
+      - '.github/workflows/farmbridge-ci.yml'
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: farmbridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run check

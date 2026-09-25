@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FarmBridge</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main>
+    <header><div><h1>FarmBridge</h1><p>Android ADB + iOS XCUITest bridge</p></div><button id="refresh">Refresh devices</button></header>
+    <section class="panel"><h2>Devices</h2><div id="devices">Loading…</div></section>
+    <section class="panel"><h2>Run workflow</h2><label>Device</label><select id="device"></select><label>Actions JSON</label><textarea id="actions" spellcheck="false">[
+  {"type":"home"},
+  {"type":"wait","ms":500}
+]</textarea><button id="run">Run</button><pre id="result"></pre></section>
+    <section class="panel"><h2>Scheduled jobs</h2><div id="jobs">Loading…</div></section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

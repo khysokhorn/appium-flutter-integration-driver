@@ -1,0 +1,8 @@
+{
+  "actions": [
+    { "type": "launch", "appId": "com.apple.Preferences" },
+    { "type": "wait", "ms": 1000 },
+    { "type": "screenshot", "path": "./ios-settings.png" },
+    { "type": "home" }
+  ]
+}
