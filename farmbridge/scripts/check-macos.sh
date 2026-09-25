@@ -17,7 +17,7 @@ check() {
 }
 
 check node yes "install with: brew install node"
-check adb no "Android support: brew install android-platform-tools"
+check adb no "Android support: brew install --cask android-platform-tools"
 check xcrun no "iOS support: install Xcode and select it with xcode-select"
 check appium no "Interactive iOS support: npm install -g appium && appium driver install xcuitest"
 
